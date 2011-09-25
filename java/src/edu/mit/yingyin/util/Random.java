@@ -28,6 +28,9 @@ public class Random {
     Arrays.fill(randArray, -1);
   }
   
+  /**
+   * @return the next random number.
+   */
 	public long next() {
 	  long val;
 		if (randArray[index] >= 0) {
@@ -39,6 +42,11 @@ public class Random {
 		return val;
 	}
 	
+	/**
+	 * Returns a uniform integer between 0 and n - 1, inclusive.
+	 * @param n a positive integer less than 2^31.
+	 * @return
+	 */
 	public long next(long n) {
 	  long r = 0x80000000L - (0x80000000L % n);
 	  long t = r;
@@ -47,7 +55,12 @@ public class Random {
 	  return r % n;
 	}
 	
+	/**
+	 * Initialize the random number generator with a seed.
+	 * @param seed
+	 */
 	public void setSeed(long seed) {
+		// Strips off the sign.
 	  long prev = modDiff(seed, 0);
 	  seed = prev;
 	  randArray[55] = prev;
@@ -57,7 +70,7 @@ public class Random {
 	    next = modDiff(prev, next);
 	    if ((seed & 1L) > 0)
 	      seed = 0x40000000L + (seed >> 1);
-	    else seed >>= 1;
+	    else seed >>= 1; // Cyclic shift right 1.
 	    next = modDiff(next, seed);
 	    prev = randArray[i];
 	  }
@@ -79,7 +92,7 @@ public class Random {
 	}
 	
 	/**
-	 * Computes difference modulo x^31.
+	 * Computes difference modulo 2^31.
 	 * @param x
 	 * @param y
 	 * @return
