@@ -22,7 +22,7 @@ public class NQueens {
   }
   
   /**
-   * An implementation that marks -1 on the board for position that is not 
+   * An implementation that marks -1 on the board for positions that are not 
    * possible after placing a queen. This is more efficient because subsequent
    * recursive calls only need to check the mark at a particular position 
    * without iteration. It requires more memory however because it needs to 
