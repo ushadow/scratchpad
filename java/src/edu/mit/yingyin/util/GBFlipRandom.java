@@ -14,7 +14,7 @@ import java.util.Arrays;
  * @author yingyin
  *
  */
-public class Random {
+public class GBFlipRandom {
   /**
    * The index of the next pseudo-random value in randArray to be used.
    */
@@ -24,7 +24,7 @@ public class Random {
    */
   private long[] randArray = new long[56];
   
-  public Random() {
+  public GBFlipRandom() {
     Arrays.fill(randArray, -1);
   }
   
