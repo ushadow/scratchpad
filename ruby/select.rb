@@ -3,7 +3,7 @@
 require "test/unit"
 
 # Selects the kth smallest item in an array counting from 0; that is, the 
-# smallest item for which k of the items in the set are smaller.
+# smallest item for which k of the items in the array are smaller or equal to.
 #
 # @param [Fixnum] k 
 # @param [Array] array the array from which we want to find the kth smallest 
@@ -14,7 +14,7 @@ def select(k, array)
   smaller = array.select { |a| a < pivot } # O(n)
   bigger = array.select { |a| a >= pivot } # O(n)
   if smaller.count == k
-    return bigger.first
+    return pivot
   elsif smaller.count > k
     return select k, smaller
   else 
@@ -30,8 +30,10 @@ class TestSelect < Test::Unit::TestCase
     a = [1, 1]
     assert_equal 1, select(1, a)
     a = [1, 3, 5, 6, 1, 10]
-    assert_equal 3, select(1, a)
+    assert_equal 1, select(1, a)
     a = [1, 3, 5, 3, 6, 1, 10]
     assert_equal 5, select(4, a)
+    a = [1, 2, 3, 4, 5, 6, 7]
+    assert_equal 3, select(2, a)
   end
 end
