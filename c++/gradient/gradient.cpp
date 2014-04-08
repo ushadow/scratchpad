@@ -5,8 +5,12 @@
 #include <cstdio>
 
 namespace {
+
+//#define DEBUG 
+
 typedef unsigned char data_t;
 #define DATA_MAX 256
+#define NUM_REPETITIONS 1
 
 class StopWatch {
 public:
@@ -14,11 +18,12 @@ public:
     tic_ = clock();
   }
 
-  void toc(const char* msg) {
+  int toc(const char* msg) {
     clock_t t = clock();
-    printf("%s\telapsed: %d ns.\n", msg, 
-           int((t - tic_) * 1000000 / CLOCKS_PER_SEC));
+    int elapsed = int((t - tic_) * 1000 / CLOCKS_PER_SEC);
+    printf("%s\telapsed: %d ms.\n", msg, elapsed);
     tic_ = t;
+    return elapsed;
   }
 
 private:
@@ -55,7 +60,8 @@ void minmax(const float* d, int n, float* min, float* max) {
   }
 }
 
-void gradient(data_t* M, int w, int h) {
+// Returns the total time taken in ms.
+int gradient(data_t* M, int w, int h) {
   float ry, rx;
   data_t *My, *My0, *My1, *Mx0, *Mx1;
   float *dx, *dy, *dxp, *dyp;
@@ -69,12 +75,12 @@ void gradient(data_t* M, int w, int h) {
 
   My = M;
   for (int y = 0; y < h; y++) {
-    ry = .5; My0 = My - w; My1 = My + w;
-    if (y == 0)     { My0 = My; ry = 1; }
-    if (y == h - 1) { My1 = My; ry = 1; }
+    if (y == 0)     { My0 = My;     My1 = My + w; ry = 1; }
+    if (y == 1)     { My0 = My - w; My1 = My + w; ry = .5; }
+    if (y == h - 1) {               My1 = My;     ry = 1; }
     for (int x = 0; x < w; x++) {
       if (x == 0)     { Mx0 = My;     Mx1 = My + 1; rx = 1; } 
-      if (x == 1)     { Mx0 = My - 1; Mx1 = My + 1; rx = 0.5; }
+      if (x == 1)     { Mx0 = My - 1; Mx1 = My + 1; rx = .5; }
       if (x == w - 1) {               Mx1 = My;     rx = 1; }
       *(dyp++) = (*My1 - *My0) * ry;
       *(dxp++) = (*Mx1 - *Mx0) * rx;
@@ -91,22 +97,25 @@ void gradient(data_t* M, int w, int h) {
   printf("min dy = %.1f\n", dy_min);
   printf("max dy = %.1f\n", dy_max);
 
+#ifdef DEBUG
   print_matrix(M, w, h);
   print_matrix(dx, w, h);
   print_matrix(dy, w, h);
+#endif
 
   delete [] dx;
   delete [] dy;
-  sw.toc("Total");
+  return sw.toc("Total");
 }
 
 // w * h should be <= INT_MAX
-void compute(int w, int h) {
+int compute(int w, int h) {
   int n = w * h;
   data_t* M = new data_t[n];
   init_random(M, n);
-  gradient(M, w, h);
+  int elapsed = gradient(M, w, h);
   delete [] M;
+  return elapsed;
 }
 
 bool is_valid_range(long int size) {
@@ -130,8 +139,14 @@ int main(int argc, char* argv[]) {
   }
 
   srand(time(NULL));
- 
-  ::compute(width, height);
+
+  int elapsed = 0;
+  for (int i = 0; i < NUM_REPETITIONS; i++) {
+    elapsed += ::compute(width, height);
+  }
+
+  if (NUM_REPETITIONS > 1)
+    printf("Average elapsed: %d ms\n", elapsed / NUM_REPETITIONS);
 
   return 0;
 }
