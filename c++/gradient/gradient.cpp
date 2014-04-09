@@ -37,7 +37,7 @@ void print_matrix(const T* M, int w, int h) {
   int i = 0;
   for (int y = 0; y < h; y++) {
     for (int x = 0; x < w; x++, i++)
-      printf("%.1f ", float(M[i]));
+      printf("%d ", M[i]);
     std::cout << std::endl;
   }
   std::cout << std::endl;
@@ -62,6 +62,7 @@ void minmax(const short* d, int n, short* min, short* max) {
   }
 }
 
+// w and h should be greater than 1.
 int gradient(data_t* M, int w, int h) {
   data_t *My0, *My1, *Mx0, *Mx1; // indices
   short *dx, *dy, *dxp, *dyp;
@@ -100,6 +101,7 @@ int gradient(data_t* M, int w, int h) {
   }
   minmax(dx, n, &dx_min, &dx_max);
 
+  // First row.
   My0 = M;
   My1 = My0 + w;
   for (int x = 0; x < w; x++) {
@@ -107,6 +109,7 @@ int gradient(data_t* M, int w, int h) {
     My0++; My1++;
   }
 
+  // Last row.
   dyp = dy + (h - 1) * w;
   My0 = M + (h - 2) * w;
   My1 = My0 + w;
