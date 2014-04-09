@@ -83,7 +83,7 @@ void init_random(data_t* M, int w, int h) {
 
 }
 
-void minmax(const int* d, int n, int* min, int* max) {
+void minmax(const short* d, int n, short* min, short* max) {
   *max = -DATA_MAX;
   *min = DATA_MAX;
   for (int i = 0; i < n; i++) {
@@ -96,16 +96,16 @@ void minmax(const int* d, int n, int* min, int* max) {
 // This seems to be faster.
 int gradient2(data_t* M, int w, int h) {
   data_t *My, *My0, *My1, *Mx0, *Mx1; // indices
-  int *dx, *dy, *dxp, *dyp;
-  int dx_max, dy_max, dx_min, dy_min;
+  short *dx, *dy, *dxp, *dyp;
+  short dx_max, dy_max, dx_min, dy_min;
   int w2 = w + 2;
   StopWatch sw;
 
   sw.tic();
   
   int n = w * h;
-  dx = dxp = new int[n];
-  dy = dyp = new int[n];
+  dx = dxp = new short[n];
+  dy = dyp = new short[n];
 
   Mx0 = M + w2 - 2;
   Mx1 = M + w2;
