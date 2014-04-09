@@ -45,7 +45,7 @@ void print_matrix(const T* M, int w, int h) {
 
 void print_usage(std::ostream& stream) {
   stream << "Usage: gradient  <width> <height>" << std::endl;
-  stream << "  width, height: positive integers, and width * height <= INT_MAX." << std::endl; 
+  stream << "  width, height: width > 1 && height > 1, and width * height <= INT_MAX." << std::endl; 
 }
 
 void init_random(data_t* M, int size) {
@@ -62,11 +62,8 @@ void minmax(const short* d, int n, short* min, short* max) {
   }
 }
 
-// Computes dx and dy in separate loops.
-// This seems to be faster.
-int gradient2(data_t* M, int w, int h) {
-  float ry, rx;
-  data_t *My, *My0, *My1, *Mx0, *Mx1; // indices
+int gradient(data_t* M, int w, int h) {
+  data_t *My0, *My1, *Mx0, *Mx1; // indices
   short *dx, *dy, *dxp, *dyp;
   short dx_max, dy_max, dx_min, dy_min;
   StopWatch sw;
@@ -77,31 +74,59 @@ int gradient2(data_t* M, int w, int h) {
   dx = dxp = new short[n];
   dy = dyp = new short[n];
 
-  My = M; // My is the center index.
+  // First and last columns.
+  Mx0 = M;
+  Mx1 = Mx0 + 1;
   for (int y = 0; y < h; y++) {
-    for (int x = 0; x < w; x++) {
-      if (x == 0)     { Mx0 = My;     Mx1 = My + 1; rx = 1; } 
-      if (x == 1)     { Mx0 = My - 1; Mx1 = My + 1; rx = .5; }
-      if (x == w - 1) {               Mx1 = My;     rx = 1; }
-      *(dxp++) = (*Mx1 - *Mx0);
-      Mx0++; Mx1++; My++;
+    *dxp = (*Mx1 - *Mx0) * 2;
+    dxp += w - 1;
+    Mx0 += w - 2;
+    Mx1 = Mx0 + 1;
+    *dxp = (*Mx1 - *Mx0) * 2;
+    dxp += 1; Mx0 += 2; Mx1 += 2;
+  }
+
+  Mx0 = M; 
+  Mx1 = Mx0 + 2;
+  dxp = dx + 1;
+  for (int y = 0; y < h; y++) {
+    for (int x = 1; x < w - 1; x++) {
+      *(dxp++) = *Mx1 - *Mx0;
+      Mx0++; Mx1++; 
     }
+    Mx0 += 2;
+    Mx1 += 2;
+    dxp += 2;
   }
   minmax(dx, n, &dx_min, &dx_max);
 
-  My = M;
-  for (int y = 0; y < h; y++) {
-    if (y == 0)     { My0 = My;     My1 = My + w; ry = 1; }
-    if (y == 1)     { My0 = My - w; My1 = My + w; ry = .5; }
-    if (y == h - 1) {               My1 = My;     ry = 1; }
+  My0 = M;
+  My1 = My0 + w;
+  for (int x = 0; x < w; x++) {
+    *(dyp++) = (*My1 - *My0) * 2;
+    My0++; My1++;
+  }
+
+  dyp = dy + (h - 1) * w;
+  My0 = M + (h - 2) * w;
+  My1 = My0 + w;
+  for (int x = 0; x < w; x++) {
+    *(dyp++) = (*My1 - *My0) * 2;
+    My0++; My1++;
+  }
+
+  My0 = M;
+  My1 = My0 + w * 2;
+  dyp = dy + w;
+  for (int y = 1; y < h - 1; y++) {
     for (int x = 0; x < w; x++) {
-      *(dyp++) = (*My1 - *My0);
-      My0++; My1++; My++;
+      *(dyp++) = *My1 - *My0;
+      My0++; My1++; 
     }
   }
-  
   minmax(dy, n, &dy_min, &dy_max);
 
+  int time = sw.toc("Total");
   printf("min dx = %.1f\n", dx_min * .5);
   printf("max dx = %.1f\n", dx_max * .5);
   printf("min dy = %.1f\n", dy_min * .5);
@@ -115,7 +140,7 @@ int gradient2(data_t* M, int w, int h) {
 
   delete [] dx;
   delete [] dy;
-  return sw.toc("Total");
+  return time;
 }
 
 // w * h should be <= INT_MAX
@@ -123,13 +148,13 @@ int compute(int w, int h) {
   int n = w * h;
   data_t* M = new data_t[n];
   init_random(M, n);
-  int elapsed = gradient2(M, w, h);
+  int elapsed = gradient(M, w, h);
   delete [] M;
   return elapsed;
 }
 
 bool is_valid_range(long int size) {
-  return size > 0 && size <= INT_MAX;
+  return size > 1 && size <= INT_MAX;
 }
 }
 
