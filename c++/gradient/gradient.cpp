@@ -83,7 +83,7 @@ void init_random(data_t* M, int w, int h) {
 
 }
 
-void minmax(const float* d, int n, float* min, float* max) {
+void minmax(const int* d, int n, int* min, int* max) {
   *max = -DATA_MAX;
   *min = DATA_MAX;
   for (int i = 0; i < n; i++) {
@@ -92,97 +92,51 @@ void minmax(const float* d, int n, float* min, float* max) {
   }
 }
 
-// Computes dx and dy in the same loop.
-// Returns the total time taken in ms.
-int gradient(data_t* M, int w, int h) {
-  float ry, rx;
-  data_t *My, *My0, *My1, *Mx0, *Mx1; // indices
-  float *dx, *dy, *dxp, *dyp;
-  StopWatch sw;
-
-  sw.tic();
-  
-  int n = w * h;
-  dx = dxp = new float[n];
-  dy = dyp = new float[n];
-
-  My = M;
-  for (int y = 0; y < h; y++) {
-    if (y == 0)     { My0 = My;     My1 = My + w; ry = 1; }
-    if (y == 1)     { My0 = My - w; My1 = My + w; ry = .5; }
-    if (y == h - 1) {               My1 = My;     ry = 1; }
-    for (int x = 0; x < w; x++) {
-      if (x == 0)     { Mx0 = My;     Mx1 = My + 1; rx = 1; } 
-      if (x == 1)     { Mx0 = My - 1; Mx1 = My + 1; rx = .5; }
-      if (x == w - 1) {               Mx1 = My;     rx = 1; }
-      *(dyp++) = (*My1 - *My0) * ry;
-      *(dxp++) = (*Mx1 - *Mx0) * rx;
-      Mx0++; Mx1++; My0++; My1++; My++;
-    }
-  }
-
-  float dx_max, dy_max, dx_min, dy_min;
-  minmax(dx, n, &dx_min, &dx_max);
-  minmax(dy, n, &dy_min, &dy_max);
-
-  printf("min dx = %.1f\n", dx_min);
-  printf("max dx = %.1f\n", dx_max);
-  printf("min dy = %.1f\n", dy_min);
-  printf("max dy = %.1f\n", dy_max);
-
-#ifdef DEBUG
-  print_matrix(M, w, h);
-  print_matrix(dx, w, h);
-  print_matrix(dy, w, h);
-#endif
-
-  delete [] dx;
-  delete [] dy;
-  return sw.toc("Total");
-}
-
 // Computes dx and dy in separate loops.
 // This seems to be faster.
 int gradient2(data_t* M, int w, int h) {
   data_t *My, *My0, *My1, *Mx0, *Mx1; // indices
-  float *dx, *dy, *dxp, *dyp;
-  float dx_max, dy_max, dx_min, dy_min;
-  int base;
+  int *dx, *dy, *dxp, *dyp;
+  int dx_max, dy_max, dx_min, dy_min;
+  int w2 = w + 2;
   StopWatch sw;
 
   sw.tic();
   
   int n = w * h;
-  dx = dxp = new float[n];
-  dy = dyp = new float[n];
+  dx = dxp = new int[n];
+  dy = dyp = new int[n];
 
-  My = M;
+  Mx0 = M + w2 - 2;
+  Mx1 = M + w2;
   for (int y = 1; y <= h; y++) {
-    My += w + 2;
-    Mx0 = My - 1; Mx1 = My + 1;  
+    Mx0 += 2; 
+    Mx1 += 2;  
     for (int x = 1; x <= w; x++) {
-      *(dxp++) = (*Mx1 - *Mx0) * .5;
+      *(dxp++) = *Mx1 - *Mx0;
       Mx1++; Mx0++;
     }
   }
-  minmax(dx, n, &dx_min, &dx_max);
+//  minmax(dx, n, &dx_min, &dx_max);
 
-  My = M;
+  My0 = M - 1;
+  My1 = M + w2 * 2 - 1;
   for (int y = 1; y <= h; y++) {
-    My += w + 2;
-    My0 = My - w - 2; 
-    My1 = My + w + 2;
+    My0 += 2;
+    My1 += 2;
     for (int x = 1; x <= w; x++) {
-      *(dyp++) = (*My1 - *My0) * .5;
+      *(dyp++) = *My1 - *My0;
       My0++; My1++; 
     }
   }
+  minmax(dy, n, &dy_min, &dy_max);
+
   int time = sw.toc("Total");
 
-  printf("min dx = %.1f\n", dx_min);
-  printf("max dx = %.1f\n", dx_max);
-  printf("min dy = %.1f\n", dy_min);
-  printf("max dy = %.1f\n", dy_max);
+  printf("min dx = %.1f\n", dx_min * .5);
+  printf("max dx = %.1f\n", dx_max * .5);
+  printf("min dy = %.1f\n", dy_min * .5);
+  printf("max dy = %.1f\n", dy_max * .5);
 
 #ifdef DEBUG
   print_matrix(M, w, h);
