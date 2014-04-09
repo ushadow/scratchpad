@@ -117,7 +117,7 @@ int gradient2(data_t* M, int w, int h) {
       Mx1++; Mx0++;
     }
   }
-//  minmax(dx, n, &dx_min, &dx_max);
+  minmax(dx, n, &dx_min, &dx_max);
 
   My0 = M - 1;
   My1 = M + w2 * 2 - 1;
